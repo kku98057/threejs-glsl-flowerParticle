@@ -29,7 +29,7 @@ export default class App {
   }
   setLight() {
     this.color = 0xffffff;
-    this.intensity = 1;
+    this.intensity = 2;
     this.light = new THREE.DirectionalLight(this.color, this.intensity);
     this.scene.add(this.light);
   }
