@@ -2,7 +2,8 @@ import * as THREE from "three";
 import vertex from "../shaders/vertexParticle.glsl";
 import fragment from "../shaders/fragment.glsl";
 import { OrbitControls } from "three/examples/jsm/controls/OrbitControls";
-
+import dat from "dat.gui";
+import t from "../img/video-01-first.jpg";
 export default class App {
   constructor() {
     this.renderer = new THREE.WebGLRenderer();
@@ -16,9 +17,9 @@ export default class App {
       75,
       window.innerWidth / window.innerHeight,
       0.1,
-      1000
+      3000
     );
-    this.camera.position.set(0, 0, 5);
+    this.camera.position.set(0, 0, 1500);
     this.time = 0;
     this.scene.add(this.camera);
 
@@ -27,17 +28,17 @@ export default class App {
     this.addMesh();
     this.setLight();
     this.setResize();
-    // this.settings()
+    this.settings();
     this.render();
   }
-  // settings() {
-  //   let that = this;
-  //   this.settings = {
-  //     progress: 0,
-  //   };
-  //   this.gui = new dat.GUI();
-  //   this.gui.add(this.settings, "progress", 0, 1, 0.01);
-  // }
+  settings() {
+    let that = this;
+    this.settings = {
+      progress: 0,
+    };
+    this.gui = new dat.GUI();
+    this.gui.add(this.settings, "progress", 0, 1, 0.01);
+  }
   setLight() {
     this.color = 0xffffff;
     this.intensity = 1;
@@ -45,32 +46,45 @@ export default class App {
     this.scene.add(this.light);
   }
   addMesh() {
-    let that = this;
-    this.uniforms = {
-      time: { type: "f", value: 0 },
-      resolution: { type: "v4", value: new THREE.Vector4() },
-      uvRate1: {
-        value: new THREE.Vector2(1, 1),
-      },
-    };
+    let number = 512 * 512;
 
-    this.geo = new THREE.PlaneGeometry(1, 1, 10, 10);
+    // this.coordnates = new THREE.BufferAttribute(new Float32Array(number, 3));
+
+    this.geo = new THREE.PlaneGeometry(480 * 1.5, 820 * 1.5, 480, 820);
     this.material = new THREE.ShaderMaterial({
-      // extensions: {
-      //   derivatives: "#extension GL_OES_standard_derivatives : enable",
-      // },
+      extensions: {
+        derivatives: "#extension GL_OES_standard_derivatives : enable",
+      },
       side: THREE.DoubleSide,
-      uniforms: this.uniforms,
+      uniforms: {
+        progress: {
+          type: "f",
+          value: 0,
+        },
+        resolution: {
+          type: "v4",
+          value: new THREE.Vector4(),
+        },
+        time: {
+          type: "f",
+          value: 0,
+        },
+        t: {
+          type: "f",
+          value: new THREE.TextureLoader().load(t),
+        },
+      },
       // wireframe: true,
-      vertexColors: vertex,
+      vertexShader: vertex,
       fragmentShader: fragment,
     });
     // this.material = new THREE.PointsMaterial({
     //   size: 0.1,
     //   color: 0xffffff,
     // });
+
     this.mesh = new THREE.Points(this.geo, this.material);
-    console.log(this.material);
+    console.log(this.geo);
     this.scene.add(this.mesh);
   }
   setResize() {
@@ -83,9 +97,8 @@ export default class App {
   }
   update() {
     this.time += 0.05;
-    this.mesh.rotation.x = this.time;
-    this.mesh.rotation.y = this.time;
-    this.uniforms.time.value = this.time;
+    // this.mesh.rotation.x = this.time;
+    // this.mesh.rotation.y = this.time;
   }
   render() {
     this.renderer.render(this.scene, this.camera);

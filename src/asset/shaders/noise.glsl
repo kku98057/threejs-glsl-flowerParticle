@@ -1,6 +1,3 @@
-varying vec2 vUv;
-varying vec3 vPosition;
-
 //
 // GLSL textureless classic 3D noise "cnoise",
 // with an RSL-style periodic variant "pnoise".
@@ -216,13 +213,4 @@ vec3 fbm_vec3(vec3 p, float frequency, float offset)
     cnoise((p+vec3(offset+20.0))*frequency),
     cnoise((p+vec3(offset-30.0))*frequency)
   );
-}
-
-void main() {
-    vUv = uv;
-    vPosition = position;
-    vec4 mvPosition = modelViewMatrix * vec4( position , 1.);
-    gl_PointSize =1.;
-    gl_Position = projectionMatrix * mvPosition;
-    
 }
