@@ -2,8 +2,14 @@ import * as THREE from "three";
 import vertex from "../shaders/vertexParticle.glsl";
 import fragment from "../shaders/fragment.glsl";
 import { OrbitControls } from "three/examples/jsm/controls/OrbitControls";
+import { EffectComposer } from "three/examples/jsm/postprocessing/EffectComposer";
+import { RenderPass } from "three/examples/jsm/postprocessing/RenderPass";
+import { UnrealBloomPass } from "three/examples/jsm/postprocessing/UnrealBloomPass";
+import { gsap } from "gsap";
 import dat from "dat.gui";
-import t from "../img/video-01-first.jpg";
+import t1End from "../img/video-01-end.jpg";
+import t2Start from "../img/video-02-first.jpg";
+
 export default class App {
   constructor() {
     this.renderer = new THREE.WebGLRenderer();
@@ -12,6 +18,10 @@ export default class App {
     this.renderer.setPixelRatio(devicePixelRatio >= 2 ? 2 : 1);
     this.container.appendChild(this.renderer.domElement);
     this.scene = new THREE.Scene();
+
+    this.video1 = document.getElementById("video1");
+
+    this.video1.play();
 
     this.camera = new THREE.PerspectiveCamera(
       75,
@@ -27,17 +37,98 @@ export default class App {
 
     this.addMesh();
     this.setLight();
+    this.addPost();
     this.setResize();
     this.settings();
+    let once = true;
+    this.video1.addEventListener("ended", () => {
+      const tl1 = gsap.timeline();
+      tl1
+        .to(this.video1, {
+          duration: 0.1,
+          opacity: 0,
+        })
+        .to(
+          this.material.uniforms.distortion,
+          {
+            value: 3,
+            duration: 2,
+            ease: "power2.inOut",
+          },
+          ">-=0.1"
+        )
+        .to(
+          this.bloomPass,
+          {
+            strength: 10,
+            duration: 2,
+            ease: "power2.out",
+          },
+          ">-=2"
+        )
+        .to(this.material.uniforms.distortion, {
+          value: 0,
+          duration: 2,
+          ease: "power2.inOut",
+        })
+        .to(
+          this.bloomPass,
+          {
+            strength: 0,
+            ease: "power2.out",
+            duration: 2,
+          },
+          ">-=2"
+        )
+        .to(
+          this.material.uniforms.progress,
+          {
+            value: 1,
+            onComplete: () => {
+              setTimeout(() => {
+                this.video2.play();
+                gsap.to(this.video1, {
+                  visibility: "hidden",
+                  duration: 0.1,
+                });
+              });
+            },
+          },
+          ">-=1.5"
+        );
+    });
+
     this.render();
+  }
+  addPost() {
+    this.renderScene = new RenderPass(this.scene, this.camera);
+
+    this.bloomPass = new UnrealBloomPass(
+      new THREE.Vector2(window.innerWidth, window.innerHeight),
+      1.5,
+      0.4,
+      0.85
+    );
+    this.bloomPass.threshold = this.settings.bloomThreshold;
+    this.bloomPass.strength = this.settings.bloomStrength;
+    this.bloomPass.radius = this.settings.bloomRadius;
+
+    this.composer = new EffectComposer(this.renderer);
+
+    this.composer.addPass(this.renderScene);
+    this.composer.addPass(this.bloomPass);
   }
   settings() {
     let that = this;
     this.settings = {
-      progress: 0,
+      distortion: 0,
+      bloomStrength: 0,
+      bloomThreshold: 0,
+      bloomRadius: 0,
     };
     this.gui = new dat.GUI();
-    this.gui.add(this.settings, "progress", 0, 1, 0.01);
+    this.gui.add(this.settings, "distortion", 0, 3, 0.01);
+    this.gui.add(this.settings, "bloomStrength", 0, 10, 0.01);
   }
   setLight() {
     this.color = 0xffffff;
@@ -50,7 +141,7 @@ export default class App {
 
     // this.coordnates = new THREE.BufferAttribute(new Float32Array(number, 3));
 
-    this.geo = new THREE.PlaneGeometry(480 * 1.5, 820 * 1.5, 480, 820);
+    this.geo = new THREE.PlaneGeometry(480 * 1.747, 820 * 1.747, 480, 820);
     this.material = new THREE.ShaderMaterial({
       extensions: {
         derivatives: "#extension GL_OES_standard_derivatives : enable",
@@ -69,19 +160,24 @@ export default class App {
           type: "f",
           value: 0,
         },
-        t: {
+        t1: {
           type: "f",
-          value: new THREE.TextureLoader().load(t),
+          value: new THREE.TextureLoader().load(t1End),
+        },
+        t2: {
+          type: "f",
+          value: new THREE.TextureLoader().load(t2Start),
+        },
+
+        distortion: {
+          type: "f",
+          value: 0,
         },
       },
       // wireframe: true,
       vertexShader: vertex,
       fragmentShader: fragment,
     });
-    // this.material = new THREE.PointsMaterial({
-    //   size: 0.1,
-    //   color: 0xffffff,
-    // });
 
     this.mesh = new THREE.Points(this.geo, this.material);
     console.log(this.geo);
@@ -93,15 +189,19 @@ export default class App {
   resize() {
     this.renderer.setSize(window.innerWidth, window.innerHeight);
     this.camera.aspect = window.innerWidth / window.innerHeight;
+    this.composer.setSize(window.innerWidth, window.innerHeight);
     this.camera.updateProjectionMatrix();
   }
   update() {
     this.time += 0.05;
-    // this.mesh.rotation.x = this.time;
-    // this.mesh.rotation.y = this.time;
+    this.material.uniforms.time.value = this.time;
+    // gsap애니메이션 끝나고 재렌더링되기때문에 제거
+    // this.material.uniforms.distortion.value = this.settings.distortion;
+    // this.bloomPass.strength = this.settings.bloomStrength;
   }
   render() {
-    this.renderer.render(this.scene, this.camera);
+    // this.renderer.render(this.scene, this.camera);
+    this.composer.render(this.scene, this.camera);
     this.update();
     requestAnimationFrame(this.render.bind(this));
   }

@@ -30,6 +30,7 @@
     "webpack-glsl-loader": "^1.0.1"
   },
   "dependencies": {
+    "gsap": "^3.11.3",
     "three": "^0.145.0",
     "threejs-glsl-loader": "^1.0.4"
   }

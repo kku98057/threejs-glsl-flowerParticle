@@ -1,5 +1,7 @@
 varying vec2 vUv;
 varying vec3 vPosition;
+uniform float time;
+uniform float distortion;
 
 //
 // GLSL textureless classic 3D noise "cnoise",
@@ -220,9 +222,19 @@ vec3 fbm_vec3(vec3 p, float frequency, float offset)
 
 void main() {
     vUv = uv;
-    vPosition = position;
-    vec4 mvPosition = modelViewMatrix * vec4( position , 1.);
-    gl_PointSize =1.;
+    
+
+    vec3 distortion1 = vec3(position)*curl_noise(vec3(
+      position.x * 0.12 + time * 0.2,
+      position.y * 0.008,
+    1.
+      )) * distortion;
+    
+    vec3 finalPosition = position + distortion1;
+
+
+    vec4 mvPosition = modelViewMatrix * vec4( finalPosition , 1.);
+    gl_PointSize =3.;
     gl_Position = projectionMatrix * mvPosition;
     
 }
