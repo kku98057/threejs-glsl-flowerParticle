@@ -7,8 +7,8 @@ import { RenderPass } from "three/examples/jsm/postprocessing/RenderPass";
 import { UnrealBloomPass } from "three/examples/jsm/postprocessing/UnrealBloomPass";
 import { gsap } from "gsap";
 import dat from "dat.gui";
-import t1End from "../img/video-01-end.jpg";
-import t2Start from "../img/video-02-first.jpg";
+import t1End from "../img/p.png";
+import t2Start from "../img/e.png";
 
 export default class App {
   constructor() {
@@ -19,9 +19,9 @@ export default class App {
     this.container.appendChild(this.renderer.domElement);
     this.scene = new THREE.Scene();
 
-    this.video1 = document.getElementById("video1");
+    // this.video1 = document.getElementById("video1");
 
-    this.video1.play();
+    // this.video1.play();
 
     this.camera = new THREE.PerspectiveCamera(
       75,
@@ -41,62 +41,44 @@ export default class App {
     this.setResize();
     this.settings();
     let once = true;
-    this.video1.addEventListener("ended", () => {
-      const tl1 = gsap.timeline();
-      tl1
-        .to(this.video1, {
-          duration: 0.1,
-          opacity: 0,
-        })
-        .to(
-          this.material.uniforms.distortion,
-          {
-            value: 3,
-            duration: 2,
-            ease: "power2.inOut",
-          },
-          ">-=0.1"
-        )
-        .to(
-          this.bloomPass,
-          {
-            strength: 10,
-            duration: 2,
-            ease: "power2.out",
-          },
-          ">-=2"
-        )
-        .to(this.material.uniforms.distortion, {
-          value: 0,
+
+    const tl1 = gsap.timeline();
+    tl1
+      .to(
+        this.material.uniforms.distortion,
+        { delay: 3, value: 3, duration: 2, ease: "power2.inOut" },
+        ">-=0.1"
+      )
+      .to(
+        this.bloomPass,
+        {
+          strength: 10,
           duration: 2,
-          ease: "power2.inOut",
-        })
-        .to(
-          this.bloomPass,
-          {
-            strength: 0,
-            ease: "power2.out",
-            duration: 2,
-          },
-          ">-=2"
-        )
-        .to(
-          this.material.uniforms.progress,
-          {
-            value: 1,
-            onComplete: () => {
-              setTimeout(() => {
-                this.video2.play();
-                gsap.to(this.video1, {
-                  visibility: "hidden",
-                  duration: 0.1,
-                });
-              });
-            },
-          },
-          ">-=1.5"
-        );
-    });
+          ease: "power2.out",
+        },
+        ">-=2"
+      )
+      .to(this.material.uniforms.distortion, {
+        value: 0,
+        duration: 2,
+        ease: "power2.inOut",
+      })
+      .to(
+        this.bloomPass,
+        {
+          strength: 0,
+          ease: "power2.out",
+          duration: 2,
+        },
+        ">-=2"
+      )
+      .to(
+        this.material.uniforms.progress,
+        {
+          value: 1,
+        },
+        ">-=1.5"
+      );
 
     this.render();
   }

@@ -18,7 +18,7 @@ void main(){
     vec4 finalTexture = mix(tt1,tt2,progress);
 
     gl_FragColor = vec4(newUV,0.,1.);
-    gl_FragColor =finalTexture;
+    gl_FragColor = finalTexture;
     // 검정입자 버리기
     if(gl_FragColor.r < 0.1 && gl_FragColor.b < 0.1 && gl_FragColor.g < 0.1) discard;
     // gl_FragColor = vec4(1.,0.1,0.2,0.5);
